@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 namespace AdventOfCode.Problems.Day2;
@@ -7,81 +8,33 @@ public sealed class SolutionDay2 : IAdventProblem
 {
     public async Task ExecuteFirstPartAsync(CancellationToken cancellationToken)
     {
+        int minLevelCount = int.MaxValue;
         int safeReportCount = 0;
         await foreach (var report in GetReportsAsync(cancellationToken))
         {
+            minLevelCount = Math.Min(minLevelCount, report.Levels.Count);
             if (IsReportViolatingAnyRules(report))
             {
                 safeReportCount++;
             }
         }
 
+        Console.WriteLine($"Minimum levels: {minLevelCount}");
         Console.WriteLine(safeReportCount);
     }
 
     public async Task ExecuteSecondPartAsync(CancellationToken cancellationToken)
     {
-        int safeReportCount = 0;
+        int safeReportsCount = 0;
         await foreach (var report in GetReportsAsync(cancellationToken))
         {
-            AnalyzedReport reportAnalysis = AnalyseReport(report);
-            if (reportAnalysis.LevelDirection == LevelDirection.Unknown)
+            if (IsReportSafeIfRemovingASingleLevel(report))
             {
-                continue;
-            }
-
-            if (Array.TrueForAll(reportAnalysis.LevelsViolationCount, x => x == 0))
-            {
-                safeReportCount++;
-                continue;
-            }
-
-            int levelsWithTwoRulePairViolationsCount = reportAnalysis.LevelsViolationCount.Count(x => x == 2);
-            if (levelsWithTwoRulePairViolationsCount > 1)
-            {
-                continue;
-            }
-
-            int levelsWithOneRulePairViolationsCount = reportAnalysis.LevelsViolationCount.Count(x => x == 1);
-            if (levelsWithTwoRulePairViolationsCount > 2)
-            {
-                continue;
-            }
-
-            if (levelsWithTwoRulePairViolationsCount > 0)
-            {
-                int firstTwoRuleViolationsLevelIndex = Array.IndexOf(reportAnalysis.LevelsViolationCount, 2);
-                Report reportWithViolationLevelRemoved = new Report(report.Levels.ToList());
-                //reportWithViolationLevelRemoved.Levels.RemoveAt(firstTwoRuleViolationsLevelIndex);
-                if (IsReportViolatingAnyRules(reportWithViolationLevelRemoved))
-                {
-                    safeReportCount++;
-                    continue;
-                }
-            }
-            else
-            {
-                int firstOneRuleViolationLevelIndex = Array.IndexOf(reportAnalysis.LevelsViolationCount, 1);
-                Report reportWithFirstViolationLevelRemoved = new Report(report.Levels.ToList());
-                //reportWithFirstViolationLevelRemoved.Levels.RemoveAt(firstOneRuleViolationLevelIndex);
-                if (IsReportViolatingAnyRules(reportWithFirstViolationLevelRemoved))
-                {
-                    safeReportCount++;
-                    continue;
-                }
-
-                int secondOneRuleViolationLevelIndex = Array.IndexOf(reportAnalysis.LevelsViolationCount, 1, firstOneRuleViolationLevelIndex + 1);
-                Report reportWithSecondViolationLevelRemoved = new Report(report.Levels.ToList());
-                //reportWithSecondViolationLevelRemoved.Levels.RemoveAt(secondOneRuleViolationLevelIndex);
-                if (IsReportViolatingAnyRules(reportWithSecondViolationLevelRemoved))
-                {
-                    safeReportCount++;
-                    continue;
-                }
+                safeReportsCount++;
             }
         }
 
-        Console.WriteLine(safeReportCount);
+        Console.WriteLine(safeReportsCount);
     }
 
     private static async IAsyncEnumerable<Report> GetReportsAsync([EnumeratorCancellation] CancellationToken cancellationToken)
@@ -101,6 +54,61 @@ public sealed class SolutionDay2 : IAdventProblem
         {
             yield return new Report(ReadLevels(report));
         }
+    }
+
+    public static bool IsReportSafeIfRemovingASingleLevel(Report report)
+    {
+        AnalyzedReport reportAnalysis = AnalyseReport(report);
+        if (reportAnalysis.LevelDirection == LevelDirection.Unknown)
+        {
+            return false;
+        }
+
+        if (Array.TrueForAll(reportAnalysis.LevelsViolationCount, x => x == 0))
+        {
+            return true;
+        }
+
+        int levelsWithTwoRulePairViolationsCount = reportAnalysis.LevelsViolationCount.Count(x => x == 2);
+        if (levelsWithTwoRulePairViolationsCount > 1)
+        {
+            return false;
+        }
+
+        int levelsWithOneRulePairViolationsCount = reportAnalysis.LevelsViolationCount.Count(x => x == 1);
+        if (levelsWithOneRulePairViolationsCount > 2)
+        {
+            return false;
+        }
+
+        if (levelsWithTwoRulePairViolationsCount > 0)
+        {
+            int firstTwoRuleViolationsLevelIndex = Array.IndexOf(reportAnalysis.LevelsViolationCount, 2);
+            int levelIndexBeforeRuleViolation = firstTwoRuleViolationsLevelIndex - 1;
+            int levelIndexAfterRuleViolation = firstTwoRuleViolationsLevelIndex + 1;
+            if (!IsViolatingAnyRules(report.Levels[levelIndexBeforeRuleViolation], report.Levels[levelIndexAfterRuleViolation], reportAnalysis.LevelDirection))
+            {
+                return true;
+            }
+        }
+        else
+        {
+            int firstOneRuleViolationLevelIndex = Array.IndexOf(reportAnalysis.LevelsViolationCount, 1);
+            if (firstOneRuleViolationLevelIndex == 0 ||
+                !IsViolatingAnyRules(report.Levels[firstOneRuleViolationLevelIndex - 1], report.Levels[firstOneRuleViolationLevelIndex + 1], reportAnalysis.LevelDirection))
+            {
+                return true;
+            }
+
+            int secondOneRuleViolationLevelIndex = Array.IndexOf(reportAnalysis.LevelsViolationCount, 1, firstOneRuleViolationLevelIndex + 1);
+            if (secondOneRuleViolationLevelIndex == report.Levels.Count - 1 ||
+                !IsViolatingAnyRules(report.Levels[secondOneRuleViolationLevelIndex - 1], report.Levels[secondOneRuleViolationLevelIndex + 1], reportAnalysis.LevelDirection))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool IsReportViolatingAnyRules(Report report)
@@ -136,6 +144,7 @@ public sealed class SolutionDay2 : IAdventProblem
             }
         }
 
+        Debug.Assert(levelPartOfRuleViolationCount.All(x => x <= 2), "A single level can, at most, be part of two rule violations since a violation is for a pair of either level besides it.");
         return new AnalyzedReport(report, levelDirection, levelPartOfRuleViolationCount);
     }
 
@@ -158,8 +167,7 @@ public sealed class SolutionDay2 : IAdventProblem
             }
         }
 
-        if ((levelIncreasingCount == 0 &&
-             levelDecreasingCount == 0) ||
+        if ((levelIncreasingCount == levelDecreasingCount) ||
             (levelIncreasingCount > 1 &&
              levelDecreasingCount > 1))
         {

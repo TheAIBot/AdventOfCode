@@ -54,4 +54,33 @@ public sealed class Day2Tests
 
         await Assert.That(reportAnalysis.ViolatesAnyRules).IsFalse();
     }
+
+    [Test]
+    [Arguments(new int[] { 8, 1, 2, 3 })]
+    [Arguments(new int[] { 1, 8, 2, 3 })]
+    [Arguments(new int[] { 1, 2, 8, 3 })]
+    [Arguments(new int[] { 1, 2, 3, 8 })]
+    [Arguments(new int[] { 8, 3, 2, 1 })]
+    [Arguments(new int[] { 3, 8, 2, 1 })]
+    [Arguments(new int[] { 3, 2, 8, 1 })]
+    [Arguments(new int[] { 3, 2, 1, 8 })]
+    public async Task IsReportSafeIfRemovingASingleLevel_WithOneProblematicLevel_ExpectIsSafe(int[] levels)
+    {
+        Report report = new Report(levels);
+
+        bool isSafe = SolutionDay2.IsReportSafeIfRemovingASingleLevel(report);
+
+        await Assert.That(isSafe).IsTrue();
+    }
+
+    [Test]
+    [Arguments(new int[] { 8, 1, 2, 3, 3 })]
+    public async Task IsReportSafeIfRemovingASingleLevel_WithTwoProblematicLevels_ExpectIsNotSafe(int[] levels)
+    {
+        Report report = new Report(levels);
+
+        bool isSafe = SolutionDay2.IsReportSafeIfRemovingASingleLevel(report);
+
+        await Assert.That(isSafe).IsFalse();
+    }
 }
