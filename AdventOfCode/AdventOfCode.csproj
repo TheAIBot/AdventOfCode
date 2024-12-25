@@ -9,6 +9,9 @@
 
   <ItemGroup>
     <None Remove="Problems\Day1\input.txt" />
+    <None Remove="Problems\Day3\input.txt" />
+    <None Remove="Problems\Day4\input.txt" />
+    <None Remove="Problems\Day5\input.txt" />
   </ItemGroup>
 
   <ItemGroup>
@@ -16,6 +19,15 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Problems\Day2\input.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Problems\Day3\input.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Problems\Day4\input.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Problems\Day5\input.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
