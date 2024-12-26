@@ -12,6 +12,7 @@
     <None Remove="Problems\Day3\input.txt" />
     <None Remove="Problems\Day4\input.txt" />
     <None Remove="Problems\Day5\input.txt" />
+    <None Remove="Problems\Day6\input.txt" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,6 +29,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Problems\Day5\input.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Problems\Day6\input.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
